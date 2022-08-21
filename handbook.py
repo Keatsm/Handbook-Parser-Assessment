@@ -20,19 +20,89 @@ with open("./conditions.json") as f:
     CONDITIONS = json.load(f)
     f.close()
 
+
+PREFIXES = ['COMP', 'MATH', 'DPST', 'MTRN', 'ELEC']
+COURSE_UNITS = 6
+COURSE_CODE_SIZE = 8
+
+
+def check_statement(courses_list, prereq):
+    
+    meets_prereq = True
+    skip = False
+    
+    for index, character in enumerate(prereq):
+        
+        if character == ')' and skip:
+            skip = False
+            continue
+            
+        if skip:
+            continue
+        
+        if character == '(':
+            meets_prereq = check_statement(courses_list, prereq[slice(index + 1)])
+            skip = True
+            
+        if any(prereq[slice(index)].startswith(prefix) for prefix in PREFIXES):
+            if prereq[slice(index, index + COURSE_CODE_SIZE)] not in courses_list:
+                meets_prereq = False
+                
+        if prereq[slice(index)].lower().startswith('and') and not meets_prereq:
+            return False
+        
+        if prereq[slice(index)].lower().startswith('or') and meets_prereq:
+            return True
+        
+        if prereq[slice(index)].lower().startswith('units of credit in'):
+            i = index - 2
+            
+            while i > 0 and prereq[i] != ' ' and prereq[i] != '(':
+                i -= 1
+                
+            UOC = int(prereq[slice(i, index - 1)])
+            
+            continue
+            
+        if prereq[slice(index)].lower().startswith('units of credit'):
+            i = index - 2
+            
+            while i > 0 and prereq[i] != ' ' and prereq[i] != '(':
+                i -= 1
+                
+            UOC = int(prereq[slice(i, index - 1)])
+            
+            if len(courses_list) * COURSE_UNITS < UOC:
+                meets_prereq = False
+            
+            
+        
+        
+    
+    return meets_prereq
+
 def is_unlocked(courses_list, target_course):
-    """Given a list of course codes a student has taken, return true if the target_course 
+    """
+    
+    Given a list of course codes a student has taken, return true if the target_course 
     can be unlocked by them.
     
     You do not have to do any error checking on the inputs and can assume that
     the target_course always exists inside conditions.json
-
-    You can assume all courses are worth 6 units of credit
+    
+    ASSUMPTION: course_list is a list (array) of course codes
+    
+    
     """
     
-    # TODO: COMPLETE THIS FUNCTION!!!
+    prequisites = CONDITIONS[target_course]
     
-    return True
+    if len(prequisites) == 0:
+        return True
+    
+    return check_statement(courses_list, prequisites)
+    
+    
 
 
 
