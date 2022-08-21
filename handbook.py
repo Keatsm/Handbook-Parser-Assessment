@@ -41,20 +41,20 @@ def check_statement(courses_list, prereq):
             continue
         
         if character == '(':
-            meets_prereq = check_statement(courses_list, prereq[slice(index + 1)])
+            meets_prereq = check_statement(courses_list, prereq[slice(index + 1, len(prereq))])
             skip = True
             
-        if any(prereq[slice(index)].startswith(prefix) for prefix in PREFIXES):
+        if any(prereq[slice(index, len(prereq))].startswith(prefix) for prefix in PREFIXES):
             if prereq[slice(index, index + COURSE_CODE_SIZE)] not in courses_list:
                 meets_prereq = False
                 
-        if prereq[slice(index)].lower().startswith('and') and not meets_prereq:
+        if prereq[slice(index, len(prereq))].lower().startswith('and') and not meets_prereq:
             return False
         
-        if prereq[slice(index)].lower().startswith('or') and meets_prereq:
+        if prereq[slice(index, len(prereq))].lower().startswith('or') and meets_prereq:
             return True
         
-        if prereq[slice(index)].lower().startswith('units of credit in'):
+        if prereq[slice(index, len(prereq))].lower().startswith('units of credit in') or prereq[slice(index, len(prereq))].lower().startswith('units oc credit in'):
             i = index - 2
             
             while i > 0 and prereq[i] != ' ' and prereq[i] != '(':
@@ -64,7 +64,7 @@ def check_statement(courses_list, prereq):
             
             continue
             
-        if prereq[slice(index)].lower().startswith('units of credit'):
+        if prereq[slice(index, len(prereq))].lower().startswith('units of credit'):
             i = index - 2
             
             while i > 0 and prereq[i] != ' ' and prereq[i] != '(':
