@@ -26,6 +26,43 @@ COURSE_UNITS = 6
 COURSE_CODE_SIZE = 8
 
 
+
+def check_level(units, courses_list, prereq):
+    i = 0
+    
+    while not prereq[i].isdigit():
+        i += 1
+    
+    unit_sum = 0
+    
+    for course in courses_list:
+        if course.startswith('COMP' + prereq[i]):
+            unit_sum += COURSE_UNITS
+            
+    if unit_sum >= units:
+        return True
+    else:
+        return False
+
+
+    
+def check_courses(units, courses_list, prereq):
+    
+    unit_sum = 0
+    
+    for index, character in enumerate(prereq):
+    
+        for course in courses_list:
+            if prereq[slice(index, len(prereq))].startswith(course):
+                unit_sum += COURSE_UNITS
+            
+    if unit_sum >= units:
+        return True
+    else:
+        return False
+
+
+
 def check_statement(courses_list, prereq):
     
     meets_prereq = True
@@ -44,9 +81,11 @@ def check_statement(courses_list, prereq):
             meets_prereq = check_statement(courses_list, prereq[slice(index + 1, len(prereq))])
             skip = True
             
-        if any(prereq[slice(index, len(prereq))].startswith(prefix) for prefix in PREFIXES):
+        if any(prereq[slice(index, len(prereq))].startswith(prefix) for prefix in PREFIXES) and not prereq[slice(index, len(prereq))].startswith("COMP courses"):
             if prereq[slice(index, index + COURSE_CODE_SIZE)] not in courses_list:
                 meets_prereq = False
+            else:
+                meets_prereq = True 
                 
         if prereq[slice(index, len(prereq))].lower().startswith('and') and not meets_prereq:
             return False
@@ -62,6 +101,14 @@ def check_statement(courses_list, prereq):
                 
             UOC = int(prereq[slice(i, index - 1)])
             
+            j = index + 19
+            
+            if prereq[slice(j, len(prereq))].lower().startswith('level'):
+                meets_prereq = check_level(UOC, courses_list, prereq[slice(j, len(prereq))])
+            elif prereq[slice(j, len(prereq))].lower().startswith('('):
+                meets_prereq = check_courses(UOC, courses_list, prereq[slice(j, len(prereq))])
+                skip = True
+            
             continue
             
         if prereq[slice(index, len(prereq))].lower().startswith('units of credit'):
@@ -74,7 +121,6 @@ def check_statement(courses_list, prereq):
             
             if len(courses_list) * COURSE_UNITS < UOC:
                 meets_prereq = False
-            
             
         
         
